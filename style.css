@@ -1,3 +1,8 @@
+@font-face {
+    font-family: "LexendMega";
+    src: url("LexendMega-Regular.ttf");
+}
+
 html, body {
     height: 100%;
     width: 100%;
