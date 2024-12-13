@@ -21,6 +21,8 @@ class V2{
 }
 
 
+
+
 function fillCircle(ctx,center, radius, color= 'green') {
     ctx.beginPath();
 
@@ -33,14 +35,13 @@ function fillCircle(ctx,center, radius, color= 'green') {
     console.log('Happy developing ✨')
 
     const canvas = document.querySelector('#game');
-    const radius = 69;
+    const radius = 50;
     const context = canvas.getContext('2d');
     const speed = 1000;
 
 
     let start;
     let pos = new V2(radius + 10, radius + 10);
-    let vel = new V2(0,0);
 
     let directionMap = {
         's': new V2(0,speed),
@@ -48,6 +49,8 @@ function fillCircle(ctx,center, radius, color= 'green') {
         'a': new V2(-speed,0),
         'd': new V2(speed,0),
     }
+
+    let keyPressed = new Set();
 
 
     function step(timestamp) {
@@ -62,12 +65,24 @@ function fillCircle(ctx,center, radius, color= 'green') {
         canvas.height = height;
 
 
+        let vel = new V2(0,0);
+
+        for(let key of keyPressed){
+            console.log(key);
+            if(key in directionMap) {
+                console.log(true);
+
+                vel =vel.add( directionMap[key]);
+            }
+        }
 
 
 
 
 
         pos = pos.add(vel.scale(elapsedTime));
+
+
 
 
         context.clearRect(0, 0, width, height);
@@ -79,19 +94,16 @@ function fillCircle(ctx,center, radius, color= 'green') {
     }
 
     document.addEventListener('keydown', (event) => {
-        console.log(event.key);
 
-        if(event.key in directionMap) {
-            vel =vel.add( directionMap[event.key]);
-        }
+        keyPressed.add(event.key);
+
     });
 
 
 
     document.addEventListener('keyup', (event) => {
-        if(event.key in directionMap) {
-            vel =vel.sub( directionMap[event.key]);
-        }
+        keyPressed.delete(event.key);
+
         }
     );
 
