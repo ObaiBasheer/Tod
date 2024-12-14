@@ -31,7 +31,7 @@ const speed = 1000;
 const radius = 69;
 const BULLET_SPEED = 300000;
 const BULLET_RADIUS = 22;
-const BULLET_LIFETIME = 1.0;
+const BULLET_LIFETIME = 5.0;
 
 
 const directionMap = {
