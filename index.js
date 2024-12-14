@@ -32,6 +32,7 @@ const radius = 69;
 const BULLET_SPEED = 300000;
 const BULLET_RADIUS = 22;
 const BULLET_LIFETIME = 5.0;
+const TUTORIAL_POPUP_SPEED = 2.0;
 
 
 const directionMap = {
@@ -41,23 +42,32 @@ const directionMap = {
     'd': new V2(1.0,0),
 }
 
-
 class TutorialPopup{
     constructor(text){
         this.dalpha = 0.0;
         this.alpha = 0.0;
         this.text = text;
+        this.onFadedIn = undefined;
+        this.onFadedOut = undefined;
     }
 
     update(dt) {
-    this.alpha += this.dalpha * dt;
+        this.alpha += this.dalpha * dt;
 
         if (this.dalpha < 0.0 && this.alpha <= 0.0) {
             this.delta = 0.0;
             this.alpha = 0.0;
+
+            if(this.onFadedOut !== undefined) {
+                this.onFadedOut();
+            }
         } else if (this.alpha > 0.0 && this.alpha >= 1.0) {
             this.delta = 0.0;
             this.alpha = 1.0;
+
+            if(this.onFadedIn !== undefined) {
+                this.onFadedIn();
+            }
         }
     }
     render(ctx) {
@@ -71,12 +81,65 @@ class TutorialPopup{
     }
 
     fadeIn() {
-        this.dalpha = 1.0;
+        this.dalpha = TUTORIAL_POPUP_SPEED;
     }
     fadeOut() {
-        this.dalpha = -1.0;
+        this.dalpha = -TUTORIAL_POPUP_SPEED;
     }
 }
+
+
+const tutorialState = Object.freeze( {
+    "LearningMovement":0,
+    "LearningShooting":1,
+    "Finished":2
+});
+
+
+const tutorialMessages = Object.freeze( [
+ "WASD To Move",
+"Left Mouse Click to shoot",
+""
+]);
+
+class Tutorial {
+    constructor() {
+    this.state = tutorialState.LearningMovement;
+    this.popup = new TutorialPopup(tutorialMessages[this.state]);
+    this.popup.fadeIn();
+
+        this.popup.onFadedOut = () => {
+
+            this.popup.text = tutorialMessages[this.state];
+            this.popup.fadeIn();
+        }
+    }
+
+    update(dt) {
+        this.popup.update(dt);
+
+    }
+    render(ctx) {
+        this.popup.render(ctx);
+    }
+
+    playerMoved(){
+        if(this.state === tutorialState.LearningMovement){
+            this.popup.fadeOut();
+            this.state += 1;
+
+        }
+    }
+
+    playerShot(){
+        if(this.state === tutorialState.LearningShooting){
+            this.state += 1;
+            this.popup.text =  tutorialMessages[this.state];
+        }
+    }
+}
+
+
 
 
 class Game {
@@ -84,30 +147,31 @@ class Game {
         this.playerPos = new V2(radius + 10, radius + 10);
         this.mousePos = new V2(0,0);
         this.keyPressed = new Set();
-        this.popup = new TutorialPopup("WASD to move around");
-        this.popup.fadeIn()
+        this.tutorial = new Tutorial();
         this.playerLearntHowToMove = false;
         this.bullets =  [];
     }
 
     update(dt) {
         let vel = new V2(0,0);
-
+        let moved = false;
         for(let key of this.keyPressed){
             console.log(key);
             if(key in directionMap) {
                 console.log(true);
 
                 vel =vel.add( directionMap[key].scale(speed));
+                moved = true;
             }
         }
 
-        if(!this.playerLearntHowToMove && vel.length() > 0.0){
-            this.playerLearntHowToMove = true;
-            this.popup.fadeOut();
+        if(moved) {
+            this.tutorial.playerMoved();
         }
+
+
         this.playerPos = this.playerPos.add(vel.scale(dt));
-        this.popup.update(dt);
+        this.tutorial.update(dt);
 
         for(let bullet of this.bullets){
             bullet.update(dt);
@@ -125,7 +189,7 @@ class Game {
 
         fillCircle(ctx, this.playerPos, radius, 'red');
 
-        this.popup.render(ctx);
+        this.tutorial.render(ctx);
 
         for(let bullet of this.bullets){
             bullet.render(ctx);
@@ -134,10 +198,12 @@ class Game {
 
     }
     keyDown(e) {
+
         this.keyPressed.add(e.key);
 
     }
     keyUp(e) {
+
         this.keyPressed.delete(e.key);
 
     }
@@ -145,6 +211,7 @@ class Game {
     mouseMove(e) {
     }
     mouseDown(e) {
+        this.tutorial.playerShot();
         const mousePos = new V2(e.offsetX, e.offsetY);
 
        const bulletVel = mousePos.sub(this.playerPos)
