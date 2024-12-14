@@ -24,15 +24,22 @@ class V2{
         const len = this.length();
         return new V2(this.x / len, this.y / len);
     }
+
+    dist(that) {
+        return this.sub(that).length();
+    }
 }
 
 const PLAYER_COLOR = '#f43841' ;
-const PLAYER_SPEED = 1000;
+const PLAYER_SPEED = 1500;
 const PLAYER_RADIUS = 40;
 const BULLET_SPEED = 300000;
-const BULLET_RADIUS = 22;
+const BULLET_RADIUS = 15;
 const BULLET_LIFETIME = 5.0;
 const TUTORIAL_POPUP_SPEED = 2.0;
+const ENEMY_SPEED = PLAYER_SPEED * 10;
+const ENEMY_RADIUS = 15;
+const ENEMY_COLOR = '#9e95c7';
 
 
 const directionMap = {
@@ -150,6 +157,11 @@ class Game {
         this.tutorial = new Tutorial();
         this.playerLearntHowToMove = false;
         this.bullets =  [];
+        this.enemies =  [];
+
+        this.enemies.push (new Enemy(new V2(800,600)));
+
+
     }
 
     update(dt) {
@@ -173,12 +185,28 @@ class Game {
         this.playerPos = this.playerPos.add(vel.scale(dt));
         this.tutorial.update(dt);
 
+        for(let enemy of this.enemies){
+            for(let bullet of this.bullets) {
+                if(enemy.pos.dist(bullet.pos) <= BULLET_RADIUS + ENEMY_RADIUS){
+                    enemy.ded = true;
+                    bullet.lifeTime = 0.0;
+                }
+            }
+
+        }
+
         for(let bullet of this.bullets){
             bullet.update(dt);
         }
 
+
         this.bullets = this.bullets.filter(bullet => bullet.lifeTime > 0.0);
 
+        for(let enemy of this.enemies){
+            enemy.update(dt, this.playerPos);
+        }
+
+        this.enemies = this.enemies.filter(enemy => !enemy.ded );
     }
     render(ctx) {
         const width = ctx.canvas.width;
@@ -189,11 +217,18 @@ class Game {
 
         fillCircle(ctx, this.playerPos, PLAYER_RADIUS, PLAYER_COLOR);
 
-        this.tutorial.render(ctx);
 
         for(let bullet of this.bullets){
             bullet.render(ctx);
         }
+
+        for(let enemy of this.enemies){
+
+            enemy.render(ctx);
+        }
+
+        this.tutorial.render(ctx);
+
 
 
     }
@@ -219,6 +254,25 @@ class Game {
             .scale(BULLET_SPEED);
 
       this.bullets.push( new Bullet(this.playerPos, bulletVel));
+
+    }
+}
+
+class Enemy {
+    constructor(pos) {
+        this.pos = pos;
+        this.ded = false;
+    }
+
+    update(dt,followPos) {
+        let vel = followPos.sub(this.pos)
+            .normalize()
+            .scale(ENEMY_SPEED * dt);
+
+        this.pos = this.pos.add(vel);
+    }
+    render(ctx){
+        fillCircle(ctx, this.pos, ENEMY_RADIUS, ENEMY_COLOR);
 
     }
 }
