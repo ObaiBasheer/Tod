@@ -29,7 +29,7 @@ class V2{
 
 const speed = 1000;
 const radius = 69;
-const BULLET_SPEED = 500000;
+const BULLET_SPEED = 300000;
 const BULLET_RADIUS = 22;
 
 
@@ -144,7 +144,7 @@ class Game {
     mouseMove(e) {
     }
     mouseDown(e) {
-        const mousePos = new V2(e.screenX, e.screenY);
+        const mousePos = new V2(e.offsetX, e.offsetY);
 
        const bulletVel = mousePos.sub(this.playerPos)
             .normalize()
