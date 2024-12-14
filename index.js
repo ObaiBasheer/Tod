@@ -31,6 +31,7 @@ const speed = 1000;
 const radius = 69;
 const BULLET_SPEED = 300000;
 const BULLET_RADIUS = 22;
+const BULLET_LIFETIME = 1.0;
 
 
 const directionMap = {
@@ -86,7 +87,7 @@ class Game {
         this.popup = new TutorialPopup("WASD to move around");
         this.popup.fadeIn()
         this.playerLearntHowToMove = false;
-        this.bullets = new Set();
+        this.bullets =  [];
     }
 
     update(dt) {
@@ -112,7 +113,7 @@ class Game {
             bullet.update(dt);
         }
 
-
+        this.bullets = this.bullets.filter(bullet => bullet.lifeTime > 0.0);
 
     }
     render(ctx) {
@@ -150,7 +151,7 @@ class Game {
             .normalize()
             .scale(BULLET_SPEED);
 
-      this.bullets.add( new Bullet(this.playerPos, bulletVel));
+      this.bullets.push( new Bullet(this.playerPos, bulletVel));
 
     }
 }
@@ -159,6 +160,7 @@ class Bullet {
     constructor(pos, vel){
         this.pos = pos;
         this.vel = vel;
+        this.lifeTime = BULLET_LIFETIME;
     }
 
     render(ctx) {
@@ -168,6 +170,7 @@ class Bullet {
 
     update(dt) {
         this.pos = this.pos.add(this.vel.scale(dt));
+        this.lifeTime -= dt;
     }
 }
 
