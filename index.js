@@ -30,6 +30,10 @@ class V2{
     }
 }
 
+function polarV2(mag,dir) {
+    return new V2(Math.cos(dir) * mag,Math.sin(dir) * mag);
+}
+
 const PLAYER_COLOR = '#f43841' ;
 const PLAYER_SPEED = 1500;
 const PLAYER_RADIUS = 40;
@@ -37,9 +41,14 @@ const BULLET_SPEED = 300000;
 const BULLET_RADIUS = 15;
 const BULLET_LIFETIME = 5.0;
 const TUTORIAL_POPUP_SPEED = 2.0;
-const ENEMY_SPEED = PLAYER_SPEED * 10;
+const ENEMY_SPEED = BULLET_SPEED / 4;
 const ENEMY_RADIUS = 15;
 const ENEMY_COLOR = '#9e95c7';
+const PARTICLE_RADIUS = 5;
+const PARTICLE_COLOR = ENEMY_COLOR;
+const PARTICLE_COUNT = 10;
+const PARTICLE_MAG = BULLET_SPEED;
+const PARTICLE_LIFETIME = 1.0;
 
 
 const directionMap = {
@@ -158,6 +167,7 @@ class Game {
         this.playerLearntHowToMove = false;
         this.bullets =  [];
         this.enemies =  [];
+        this.particles = [];
 
         this.enemies.push (new Enemy(new V2(800,600)));
 
@@ -202,6 +212,16 @@ class Game {
 
         this.bullets = this.bullets.filter(bullet => bullet.lifeTime > 0.0);
 
+
+        for(let particle of this.particles){
+            particle.update(dt);
+        }
+
+
+        this.particles = this.particles.filter(particle => particle.lifeTime > 0.0);
+
+
+
         for(let enemy of this.enemies){
             enemy.update(dt, this.playerPos);
         }
@@ -220,6 +240,10 @@ class Game {
 
         for(let bullet of this.bullets){
             bullet.render(ctx);
+        }
+
+        for(let particle of this.particles){
+            particle.render(ctx);
         }
 
         for(let enemy of this.enemies){
@@ -254,6 +278,35 @@ class Game {
             .scale(BULLET_SPEED);
 
       this.bullets.push( new Bullet(this.playerPos, bulletVel));
+
+    }
+}
+
+class Particle {
+    constructor(pos,vel,lifeTime, radius) {
+        this.pos = pos;
+        this.vel = vel;
+        this.lifeTime = lifeTime;
+        this.radius = radius;
+    }
+
+    render(ctx){
+        fillCircle(ctx, this.pos, this.radius, PARTICLE_COLOR);
+
+    }
+    update(dt) {
+        this.pos = this.pos.add(this.vel.scale(dt));
+        this.lifeTime -= dt;
+    }
+}
+
+function particleBurst(particles, center){
+    for(let i = 0; i < Math.random() *  PARTICLE_COUNT; ++i){
+        particles.push(
+            new Particle(center,
+                polarV2(Math.random() * PARTICLE_MAG, Math.random() * 2 * Math.PI),
+                Math.random() * PARTICLE_LIFETIME,
+                Math.random() * PARTICLE_RADIUS));
 
     }
 }
